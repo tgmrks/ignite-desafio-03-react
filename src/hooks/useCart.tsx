@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+import { useRef } from 'react';
 import { createContext, ReactNode, useContext, useState } from 'react';
 import { toast } from 'react-toastify';
 import { api } from '../services/api';
@@ -33,6 +35,21 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
     return [];
   });
 
+  //Bonus: atualizando localStorage com useRef()
+  const previousCartRef = useRef<Product[]>();
+
+  useEffect(() => {
+    previousCartRef.current = cart;
+  });
+
+  const previousCartValue = previousCartRef.current ?? cart;//if falsy (undefined) set 'cart'
+
+  useEffect(() => {
+    if (previousCartValue !== cart) { //sth changed
+      localStorage.setItem('@RocketShoes:cart', JSON.stringify(cart))
+    }
+  }, [cart, previousCartValue]);
+
   const addProduct = async (productId: number) => {
     try {
       const updatedCart = [...cart];//imutabilidade
@@ -63,7 +80,7 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
       //depois de toda verificacao e atualizacao, perpetue o cart no estado e localStorage
       setCart(updatedCart);
       //o setCart alterou o cart que permanecia imultavel no estado ate este momento; porem ainda nao esta disponivel para no runtime, entao passe o updatedCart para o localStorage
-      localStorage.setItem('@RocketShoes:cart', JSON.stringify(updatedCart))
+      //localStorage.setItem('@RocketShoes:cart', JSON.stringify(updatedCart))
 
     } catch {
       toast.error('Erro na adição do produto');
@@ -78,7 +95,7 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
       if (productIndex >= 0) {
         updatedCart.splice(productIndex, 1);//index, qtd to remove
         setCart(updatedCart);
-        localStorage.setItem('@RocketShoes:cart', JSON.stringify(updatedCart));
+        //localStorage.setItem('@RocketShoes:cart', JSON.stringify(updatedCart));
       } else {  
         throw Error(); //forca chamada do catch
       }
@@ -111,7 +128,7 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
       if (productExists) {
         productExists.amount = amount
         setCart(updatedCart);
-        localStorage.setItem('@RocketShoes:cart', JSON.stringify(updatedCart));
+        //localStorage.setItem('@RocketShoes:cart', JSON.stringify(updatedCart));
       } else {
         throw Error();
       }
